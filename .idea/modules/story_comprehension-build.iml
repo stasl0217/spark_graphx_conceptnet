@@ -125,6 +125,7 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="library" name="org.apache.spark:spark-graphx_2.11:2.0.1" level="project" />
+    <orderEntry type="library" name="R User Library" level="project" />
+    <orderEntry type="library" name="R Skeletons" level="application" />
   </component>
 </module>

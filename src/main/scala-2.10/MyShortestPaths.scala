@@ -38,6 +38,8 @@ object MyShortestPaths extends Serializable {
     }(collection.breakOut) // more efficient alternative to [[collection.Traversable.toMap]]
   }
 
+  private val CUTOFF = 20
+
   /**
     * Computes shortest paths to the given set of landmark vertices.
     *
@@ -50,23 +52,27 @@ object MyShortestPaths extends Serializable {
     * @return a graph where each vertex attribute is a map containing the shortest-path distance to
     * each reachable landmark vertex.
     */
-  def run[VD, ED: ClassTag](graph: Graph[VD, ED], landmarks: Seq[VertexId]): Graph[SPMap, ED] = {
-    val spGraph = graph.mapVertices { (vid, attr) =>
+  def run[VD, ED: ClassTag](graph: Graph[VD, ED], landmarks: Seq[VertexId]): Graph[SPMap, ED] =
+  {
+    val spGraph = graph.mapVertices //vertices attr: Map() or Map(vid->0) for landmarks
+    { (vid, attr) =>
       if (landmarks.contains(vid)) makeMap(vid -> 0) else makeMap()
     }
 
-    val initialMessage = makeMap()
+    val initialMessage = makeMap() //Map()
 
-    def vertexProgram(id: VertexId, attr: SPMap, msg: SPMap): SPMap = {
-      addMaps(attr, msg)
+    def vertexProgram(id: VertexId, attr: SPMap, msg: SPMap): SPMap =
+    {
+      addMaps(attr, msg)  // combine two Map()
     }
 
-    def sendMessage(edge: EdgeTriplet[SPMap, _]): Iterator[(VertexId, SPMap)] = {
-      val newAttr = incrementMap(edge.dstAttr)
+    def sendMessage(edge: EdgeTriplet[SPMap, _]): Iterator[(VertexId, SPMap)] =
+    {
+      val newAttr = incrementMap(edge.dstAttr)  // d+1
       if (edge.srcAttr != addMaps(newAttr, edge.srcAttr)) Iterator((edge.srcId, newAttr))
       else Iterator.empty
     }
 
-    Pregel(spGraph, initialMessage)(vertexProgram, sendMessage, addMaps)
+    Pregel(spGraph, initialMessage, CUTOFF)(vertexProgram, sendMessage, addMaps)
   }
 }
